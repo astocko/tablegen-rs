@@ -1,0 +1,10 @@
+[package]
+name = "tablegen"
+version = "0.1.0"
+authors = ["Alexander Stocko <as@coder.gg>"]
+build = "build.rs"
+
+[dependencies]
+
+[build-dependencies]
+gcc = "0.3"
