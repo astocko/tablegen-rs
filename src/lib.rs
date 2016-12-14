@@ -1,7 +1,7 @@
+use std::ffi::CStr;
 use std::ffi::CString;
 use std::os::raw::c_char;
 use std::os::raw::c_void;
-use std::mem;
 use std::ptr;
 
 #[repr(C)]
@@ -17,8 +17,8 @@ extern "C" {
                     includes: *const *const c_char)
                     -> *const CTableGen;
     fn tablegen_destroy(tg: *const CTableGen);
-
     fn tablegen_parse_file(tg: *const CTableGen);
+    fn tablegen_get_def(tg: *const CTableGen, name: *const c_char) -> *const c_char;
 }
 
 
@@ -29,14 +29,9 @@ pub struct TableGen {
 impl TableGen {
     pub fn new(input: &str, includes: Vec<&str>) -> Result<TableGen, &'static str> {
         let input = CString::new(input).unwrap();
-
-        let includes: Vec<CString> = includes.iter().map(|&i| CString::new(i).unwrap()).collect();
-        let includesv: Vec<*const c_char> = includes.into_iter().map(|i| {i.as_ptr()}).collect();
-
-        // let includes: Vec<*const c_char> =
-        //     includes.iter().map(|&x| CString::new(x).unwrap().as_ptr()).collect();
-
-        // let tg = unsafe { tablegen_new(input.as_ptr(), includes.len() as i32, includes.as_ptr()) };
+        let cstrings: Vec<CString> = includes.iter().map(|&i| CString::new(i).unwrap()).collect();
+        let includes: Vec<*const c_char> = cstrings.iter().map(|i| i.as_ptr()).collect();
+        let tg = unsafe { tablegen_new(input.as_ptr(), includes.len() as i32, includes.as_ptr()) };
 
         if tg != ptr::null() {
             Ok(TableGen { tblgen: tg })
@@ -48,6 +43,15 @@ impl TableGen {
     pub fn parse(&self) {
         unsafe {
             tablegen_parse_file(self.tblgen);
+        }
+    }
+
+    pub fn get_def(&self, name: &str) -> String {
+        let name = CString::new(name).unwrap();
+        unsafe {
+            CStr::from_ptr(tablegen_get_def(self.tblgen, name.as_ptr()))
+                .to_string_lossy()
+                .into_owned()
         }
     }
 }
@@ -78,5 +82,8 @@ mod tests {
 
         println!("Parsing!");
         tg.parse();
+
+        println!("def");
+        println!("{}", tg.get_def("llvm_v16i8_ty"));
     }
 }
