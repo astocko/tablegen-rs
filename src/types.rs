@@ -1,6 +1,7 @@
 use record::Record;
 use compound_value::{DagValue, ListValue};
 
+#[derive(Debug)]
 pub enum TypedValue {
     Bit(i8),
     Bits(Vec<i8>),

@@ -12,9 +12,15 @@ fn main() {
     let out_dir = env::var("OUT_DIR").unwrap();
     let target = env::var("TARGET").unwrap();
 
+    let llvm_config_path: String = if let Ok(bin) = env::var("LLVM_CONFIG_PATH") {
+        bin
+    } else {
+        String::from("llvm-config")
+    };
+
 
     let dst = Config::new("ctablegen")
-        .define("LLVM_CONFIG_BIN", "llvm-config-3.9")
+        .define("LLVM_CONFIG_BIN", llvm_config_path)
         .cxxflag("")
         .build();
 

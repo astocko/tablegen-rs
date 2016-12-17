@@ -6,6 +6,7 @@ use api::*;
 use record_keeper::RecordKeeper;
 use record_value::RecordValue;
 
+#[derive(Debug)]
 pub struct Record {
     r_ptr: *const CRecord,
     pub name: Option<String>,

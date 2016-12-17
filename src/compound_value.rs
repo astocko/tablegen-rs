@@ -1,4 +1,5 @@
 use std::ptr;
+use std::ffi::CStr;
 
 use api::*;
 use types::TypedValue;
@@ -6,6 +7,7 @@ use typed_init::TypedInit;
 
 
 
+#[derive(Debug)]
 pub struct DagValue {
     dag_ptr: *const CRecordValue,
     pub name: Option<String>,
@@ -35,18 +37,34 @@ impl DagIterator {
 }
 
 impl Iterator for DagIterator {
-    type Item = TypedValue;
+    type Item = (String, TypedValue);
 
-    fn next(&mut self) -> Option<TypedValue> {
-        let ti = tg_ffi!(TGDagItrNext, self.iter, TypedInit::from_ptr);
-        if let Some(ti) = ti {
-            Some(ti.to_typed_value())
-        } else {
-            None
+    fn next(&mut self) -> Option<(String, TypedValue)> {
+        let dp = unsafe {
+            let dp_ref = TGDagItrNextPair(self.iter);
+            let name_ptr = TGDagPairGetKey(dp_ref);
+            let ti = tg_ffi!(TGDagPairGetValue, dp_ref, TypedInit::from_ptr);
+            let name = {
+                if name_ptr == ptr::null() {
+                    None
+                } else {
+                    Some(CStr::from_ptr(name_ptr).to_string_lossy().into_owned())
+                }
+            };
+            (name, ti)
+        };
+
+        match dp {
+            (None, None) => None,
+            (Some(x), None) => Some((x, TypedValue::Invalid)),
+            (None, Some(x)) => Some((String::from(""), x.to_typed_value())),
+            (Some(x), Some(y)) => Some((x, y.to_typed_value())),
         }
+
     }
 }
 
+#[derive(Debug)]
 pub struct ListValue {
     list_ptr: *const CRecordValue,
     pub name: Option<String>,

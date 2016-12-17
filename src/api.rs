@@ -27,6 +27,7 @@ pub enum CTypedInit {}
 pub enum CRecordValueIter {}
 pub enum CListIterator {}
 pub enum CDagIterator {}
+pub enum CDagPair {}
 
 
 extern "C" {
@@ -79,6 +80,10 @@ extern "C" {
     // LLVM DagType
     pub fn TGDagRecordGetValues(record_val: *const CRecordValue) -> *const CDagIterator;
     pub fn TGDagItrNext(iter: *const CDagIterator) -> *const CTypedInit;
+    pub fn TGDagItrNextPair(iter: *const CDagIterator) -> *const CDagPair;
+    pub fn TGDagPairGetKey(pair: *const CDagPair) -> *const c_char;
+    pub fn TGDagPairGetValue(pair: *const CDagPair) -> *const CTypedInit;
+
 
     // LLVM TypedInit
     pub fn TGInitRecType(init_ref: *const CTypedInit) -> RecordValueType;
