@@ -14,3 +14,5 @@ CTestTestfile.cmake
 # cmake build
 lib/build
 lib/compile_commands.json
+
+*.log

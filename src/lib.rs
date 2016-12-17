@@ -1,89 +1,87 @@
-use std::ffi::CStr;
-use std::ffi::CString;
-use std::os::raw::c_char;
-use std::os::raw::c_void;
-use std::ptr;
+#[macro_use]
+mod macros;
 
-#[repr(C)]
-pub struct CTableGen {
-    parser: *const c_void,
-    records: *const c_void,
-    source_mgr: *const c_void,
-}
+mod api;
+pub mod tablegen;
+pub mod record_keeper;
+pub mod record_map;
+pub mod record;
+pub mod record_value;
+pub mod compound_value;
+pub mod types;
+pub mod typed_init;
 
-extern "C" {
-    fn tablegen_new(input: *const c_char,
-                    include_count: i32,
-                    includes: *const *const c_char)
-                    -> *const CTableGen;
-    fn tablegen_destroy(tg: *const CTableGen);
-    fn tablegen_parse_file(tg: *const CTableGen);
-    fn tablegen_get_def(tg: *const CTableGen, name: *const c_char) -> *const c_char;
-}
-
-
-pub struct TableGen {
-    tblgen: *const CTableGen,
-}
-
-impl TableGen {
-    pub fn new(input: &str, includes: Vec<&str>) -> Result<TableGen, &'static str> {
-        let input = CString::new(input).unwrap();
-        let cstrings: Vec<CString> = includes.iter().map(|&i| CString::new(i).unwrap()).collect();
-        let includes: Vec<*const c_char> = cstrings.iter().map(|i| i.as_ptr()).collect();
-        let tg = unsafe { tablegen_new(input.as_ptr(), includes.len() as i32, includes.as_ptr()) };
-
-        if tg != ptr::null() {
-            Ok(TableGen { tblgen: tg })
-        } else {
-            Err("Could not create a TableGen instance")
-        }
-    }
-
-    pub fn parse(&self) {
-        unsafe {
-            tablegen_parse_file(self.tblgen);
-        }
-    }
-
-    pub fn get_def(&self, name: &str) -> String {
-        let name = CString::new(name).unwrap();
-        unsafe {
-            CStr::from_ptr(tablegen_get_def(self.tblgen, name.as_ptr()))
-                .to_string_lossy()
-                .into_owned()
-        }
-    }
-}
-
-impl Drop for TableGen {
-    fn drop(&mut self) {
-        println!("Dropping");
-        unsafe {
-            tablegen_destroy(self.tblgen);
-        }
-    }
-}
+pub use tablegen::TableGen;
+pub use record_keeper::RecordKeeper;
+pub use record_map::RecordMap;
+pub use record::Record;
+pub use record_value::RecordValue;
+pub use compound_value::{DagValue, ListValue};
+pub use types::TypedValue;
+pub use typed_init::TypedInit;
 
 
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::str;
+    use std::collections::HashSet;
+
+    fn parse_ins(s: &String) -> String {
+        let ins: Vec<&str> = s.split(&['\t', '"'][..]).collect();
+
+        if let Some(&x) = ins.get(1) {
+            String::from(x)
+        } else {
+            String::from("")
+        }
+
+    }
+
+
     #[test]
     fn it_works() {
 
-        let input = "/home/astocko/dev/public/tablegen-rs/lib/third-party/llvm-3.9.\
+        let input = "/home/astocko/dev/public/tablegen-rs/ctablegen/third-party/llvm-3.9.\
                      1/lib/Target/X86/X86.td";
-        let includes =
-            vec!["/home/astocko/dev/public/tablegen-rs/lib/third-party/llvm-3.9.1/lib/Target/X86",
-                 "/home/astocko/dev/public/tablegen-rs/lib/third-party/llvm-3.9.1/include"];
-        let mut tg = TableGen::new(input, includes).unwrap();
+        let includes = vec!["/home/astocko/dev/public/tablegen-rs/ctablegen/third-party/llvm-3.9.\
+                             1/lib/Target/X86",
+                            "/home/astocko/dev/public/tablegen-rs/ctablegen/third-party/llvm-3.9.\
+                             1/include"];
 
-        println!("Parsing!");
-        tg.parse();
+        let mut instructions: HashSet<String> = HashSet::new();
 
-        println!("def");
-        println!("{}", tg.get_def("llvm_v16i8_ty"));
+        let mut tg = tablegen::TableGen::new(input, includes).unwrap();
+        if let Ok(_) = tg.parse() {
+            let defs = tg.record_keeper().unwrap().defs().unwrap();
+            let keys = defs.keys().unwrap();
+
+            for k in &keys {
+                let rec = &defs.get(k).unwrap();
+                if rec.anonymous() == false && !k.contains("anonymous") {
+                    for val in rec.values_iter().unwrap() {
+                        if val.name.unwrap() == "AsmString" {
+                            let tv = val.value;
+                            match tv {
+                                TypedValue::String(x) => {
+                                    instructions.insert(parse_ins(&x));
+                                }
+                                _ => (),
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        let mut instructions: Vec<String> = instructions.into_iter().collect();
+        instructions.sort();
+
+        for ins in &instructions {
+            println!("{}", ins);
+        }
+
+
     }
 }

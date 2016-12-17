@@ -28,7 +28,7 @@ fn main() {
     println!("cargo:rustc-link-lib=static=LLVMSupport");
 
     println!("cargo:rustc-link-search=native={}", dst.display());
-    println!("cargo:rustc-link-lib=static=tblgen");
+    println!("cargo:rustc-link-lib=static=ctablegen");
 
 
     let target = {
