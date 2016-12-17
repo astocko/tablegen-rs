@@ -1,0 +1,3 @@
+[submodule "ctablegen"]
+	path = ctablegen
+	url = https://github.com/astocko/ctablegen
