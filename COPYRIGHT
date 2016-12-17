@@ -1,0 +1,26 @@
+Short version for non-lawyers:
+
+tablegen-rs is dual-licensed under Apache 2.0 and MIT
+terms.
+
+
+Longer version:
+
+tablegen-rs is copyright 2016, Alexander Stocko <as@coder.gg>.
+
+Licensed under the Apache License, Version 2.0
+<LICENSE-APACHE or
+http://www.apache.org/licenses/LICENSE-2.0> or the MIT
+license <LICENSE-MIT or http://opensource.org/licenses/MIT>,
+at your option. All files in the project carrying such
+notice may not be copied, modified, or distributed except
+according to those terms.
+
+
+tablegen-rs includes packages written by third parties.
+The following third party packages are included, and carry
+their own copyright notices and license terms:
+
+* ctablegen. Code for this package is found in ctablegen/.
+
+    See ctablegen/COPYRIGHT for details.

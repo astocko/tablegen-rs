@@ -3,6 +3,12 @@ name = "tablegen"
 version = "0.1.0"
 authors = ["Alexander Stocko <as@coder.gg>"]
 build = "build.rs"
+description = "Bindings to LLVM's TableGen via the ctablegen library"
+license = "MIT/Apache 2.0"
+repository = "https://github.com/astocko/tablegen-rs"
+readme = "README.md"
+documentation = "https://github.com/astocko/tablegen-rs"
+keywords = ["llvm", "tablegen", "parser"]
 
 [dependencies]
 
