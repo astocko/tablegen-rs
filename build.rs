@@ -21,9 +21,13 @@ fn main() {
     let mut cfg = File::open(format!("{}/llvm_lib_dir.cfg", dst.display())).unwrap();
     let mut lib_dir = String::new();
     cfg.read_to_string(&mut lib_dir);
+    let lines: Vec<&str> = lib_dir.split("\n").collect();
+    for l in lines[1].split(' ') {
+        let (_, lib) = l.split_at(2);
+        println!("cargo:rustc-flags=-l dylib={}", lib);
+    }
 
-    println!("cargo:rustc-flags=-l dylib=tinfo");
-    println!("cargo:rustc-link-search=native={}", lib_dir);
+    println!("cargo:rustc-link-search=native={}", lines[0]);
     println!("cargo:rustc-link-lib=static=LLVMCore");
     println!("cargo:rustc-link-lib=static=LLVMSupport");
 
