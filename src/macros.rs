@@ -7,10 +7,12 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use types::Error;
+
 macro_rules! not_init {
     ($val: ident) => {
         if !$val.initialized {
-            return None
+            return Err(Error::Other("TableGen is not initialized"))
         }
     }
 }
@@ -18,7 +20,7 @@ macro_rules! not_init {
 macro_rules! not_null {
     ($val: expr) => {
         if $val == ptr::null() {
-            return None
+            return Err(Error::Null)
         }
     }
 }
@@ -28,9 +30,9 @@ macro_rules! tg_ffi {
         unsafe {
             let val = $func($arg1);
             if val == ptr::null() {
-                None
+                Err(Error::Null)
             } else {
-                Some($ctr(val))
+                Ok($ctr(val))
             }
         }
     };
@@ -38,9 +40,9 @@ macro_rules! tg_ffi {
         unsafe {
             let val = $func($arg1, $arg2);
             if val == ptr::null() {
-                None
+                Err(Error::Null)
             } else {
-                Some($ctr(val))
+                Ok($ctr(val))
             }
         }
     };
@@ -48,9 +50,9 @@ macro_rules! tg_ffi {
         unsafe {
             let val = $func($arg1, $arg2, $arg3);
             if val == ptr::null() {
-                None
+                Err(Error::Null)
             } else {
-                Some($ctr(val))
+                Ok($ctr(val))
             }
         }
     }
@@ -61,7 +63,7 @@ macro_rules! tg_ffi_string {
         unsafe {
             let cstr = $func($arg1);
             not_null!(cstr);
-            let s = Some(CStr::from_ptr(cstr).to_string_lossy().into_owned());
+            let s = Ok(CStr::from_ptr(cstr).to_string_lossy().into_owned());
             TGStringFree(cstr);
             s
         }
@@ -70,14 +72,14 @@ macro_rules! tg_ffi_string {
         unsafe {
             let cstr = $func($arg1);
             not_null!(cstr);
-            Some(CStr::from_ptr(cstr).to_string_lossy().into_owned())
+            Ok(CStr::from_ptr(cstr).to_string_lossy().into_owned())
         }
     };
     ($func: expr, $arg1: expr, $arg2: expr) => {
         unsafe {
             let cstr = $func($arg1, $arg2);
             not_null!(cstr);
-            Some(CStr::from_ptr(cstr).to_string_lossy().into_owned())
+            Ok(CStr::from_ptr(cstr).to_string_lossy().into_owned())
         }
     };
 
@@ -88,7 +90,7 @@ macro_rules! match_typed_value {
     match $value {
         $(
             $variant1 => {
-            if let Some(v) = $func {
+            if let Ok(v) = $func {
                 $variant2(v)
             } else {
                 $invalid

@@ -13,6 +13,7 @@ use std::ptr;
 
 use api::*;
 use record::Record;
+use types::Error;
 
 
 pub struct RecordMap {
@@ -24,12 +25,12 @@ impl RecordMap {
         RecordMap { rm_ptr: rm }
     }
 
-    pub fn get(&self, name: &str) -> Option<Record> {
+    pub fn get(&self, name: &str) -> Result<Record, Error> {
         let name = CString::new(name).unwrap();
         tg_ffi!(TGRecordMapGet, self.rm_ptr, name.as_ptr(), Record::from_ptr)
     }
 
-    pub fn keys(&self) -> Option<Vec<String>> {
+    pub fn keys(&self) -> Result<Vec<String>, Error> {
         let mut len: usize = 0;
         let mut cstrs = unsafe { TGRecordMapGetKeys(self.rm_ptr, &mut len) };
         not_null!(cstrs);
@@ -49,6 +50,6 @@ impl RecordMap {
             TGStringArrayFree(cstrs);
         }
 
-        Some(strings)
+        Ok(strings)
     }
 }

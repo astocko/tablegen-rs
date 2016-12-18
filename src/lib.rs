@@ -27,6 +27,7 @@ pub use record::Record;
 pub use record_value::RecordValue;
 pub use compound_value::{DagValue, ListValue};
 pub use types::TypedValue;
+pub use types::Error;
 pub use typed_init::TypedInit;
 
 

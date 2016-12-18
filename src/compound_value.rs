@@ -12,6 +12,7 @@ use std::ffi::CStr;
 
 use api::*;
 use types::TypedValue;
+use types::Error;
 use typed_init::TypedInit;
 
 
@@ -19,18 +20,18 @@ use typed_init::TypedInit;
 #[derive(Debug)]
 pub struct DagValue {
     dag_ptr: *const CRecordValue,
-    pub name: Option<String>,
+    pub name: Result<String, Error>,
 }
 
 impl DagValue {
-    pub fn from_ptr(val: *const CRecordValue, name: Option<String>) -> DagValue {
+    pub fn from_ptr(val: *const CRecordValue, name: Result<String, Error>) -> DagValue {
         DagValue {
             dag_ptr: val,
             name: name,
         }
     }
 
-    pub fn values_iter(&self) -> Option<DagIterator> {
+    pub fn values_iter(&self) -> Result<DagIterator, Error> {
         tg_ffi!(TGDagRecordGetValues, self.dag_ptr, DagIterator::from_ptr)
     }
 }
@@ -64,10 +65,10 @@ impl Iterator for DagIterator {
         };
 
         match dp {
-            (None, None) => None,
-            (Some(x), None) => Some((x, TypedValue::Invalid)),
-            (None, Some(x)) => Some((String::from(""), x.to_typed_value())),
-            (Some(x), Some(y)) => Some((x, y.to_typed_value())),
+            (None, Err(_)) => None,
+            (Some(x), Err(_)) => Some((x, TypedValue::Invalid)),
+            (None, Ok(x)) => Some((String::from(""), x.to_typed_value())),
+            (Some(x), Ok(y)) => Some((x, y.to_typed_value())),
         }
 
     }
@@ -76,18 +77,18 @@ impl Iterator for DagIterator {
 #[derive(Debug)]
 pub struct ListValue {
     list_ptr: *const CRecordValue,
-    pub name: Option<String>,
+    pub name: Result<String, Error>,
 }
 
 impl ListValue {
-    pub fn from_ptr(val: *const CRecordValue, name: Option<String>) -> ListValue {
+    pub fn from_ptr(val: *const CRecordValue, name: Result<String, Error>) -> ListValue {
         ListValue {
             list_ptr: val,
             name: name,
         }
     }
 
-    pub fn values_iter(&self) -> Option<ListIterator> {
+    pub fn values_iter(&self) -> Result<ListIterator, Error> {
         tg_ffi!(TGListRecordGetValues, self.list_ptr, ListIterator::from_ptr)
     }
 }
@@ -107,7 +108,7 @@ impl Iterator for ListIterator {
 
     fn next(&mut self) -> Option<TypedValue> {
         let li = tg_ffi!(TGListItrNext, self.iter, TypedInit::from_ptr);
-        if let Some(li) = li {
+        if let Ok(li) = li {
             Some(li.to_typed_value())
         } else {
             None

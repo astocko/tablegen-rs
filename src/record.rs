@@ -14,32 +14,33 @@ use std::ptr;
 use api::*;
 use record_keeper::RecordKeeper;
 use record_value::RecordValue;
+use types::Error;
 
 #[derive(Debug)]
 pub struct Record {
     r_ptr: *const CRecord,
-    pub name: Option<String>,
+    pub name: Result<String, Error>,
 }
 
 impl Record {
     pub fn from_ptr(rec: *const CRecord) -> Record {
         let mut rec = Record {
             r_ptr: rec,
-            name: None,
+            name: Err(Error::Null),
         };
         rec.name = rec.name();
         rec
     }
 
-    fn name(&mut self) -> Option<String> {
+    fn name(&mut self) -> Result<String, Error> {
         tg_ffi_string!(TGRecordGetName, self.r_ptr)
     }
 
-    pub fn records(&self) -> Option<RecordKeeper> {
+    pub fn records(&self) -> Result<RecordKeeper, Error> {
         tg_ffi!(TGRecordGetRecords, self.r_ptr, RecordKeeper::from_ptr)
     }
 
-    pub fn value(&self, name: &str) -> Option<RecordValue> {
+    pub fn value(&self, name: &str) -> Result<RecordValue, Error> {
         let name = CString::new(name).unwrap();
         tg_ffi!(TGRecordGetValue,
                 self.r_ptr,
@@ -62,7 +63,7 @@ impl Record {
         }
     }
 
-    pub fn values_iter(&self) -> Option<RecordIterator> {
+    pub fn values_iter(&self) -> Result<RecordIterator, Error> {
         tg_ffi!(TGRecordGetValuesItr, self.r_ptr, RecordIterator::from_ptr)
     }
 }
@@ -81,7 +82,11 @@ impl Iterator for RecordIterator {
     type Item = RecordValue;
 
     fn next(&mut self) -> Option<RecordValue> {
-        tg_ffi!(TGRecordValItrNext, self.iter, RecordValue::from_ptr)
+        if let Ok(res) = tg_ffi!(TGRecordValItrNext, self.iter, RecordValue::from_ptr) {
+            Some(res)
+        } else {
+            None
+        }
     }
 }
 

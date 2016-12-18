@@ -14,6 +14,8 @@ use api::*;
 use record_map::RecordMap;
 use record::Record;
 
+use types::Error;
+
 
 pub struct RecordKeeper {
     rk_ptr: *const CRecordKeeper,
@@ -24,15 +26,15 @@ impl RecordKeeper {
         RecordKeeper { rk_ptr: rk }
     }
 
-    pub fn classes(&self) -> Option<RecordMap> {
+    pub fn classes(&self) -> Result<RecordMap, Error> {
         tg_ffi!(TGRecordKeeperGetClasses, self.rk_ptr, RecordMap::from_ptr)
     }
 
-    pub fn defs(&self) -> Option<RecordMap> {
+    pub fn defs(&self) -> Result<RecordMap, Error> {
         tg_ffi!(TGRecordKeeperGetDefs, self.rk_ptr, RecordMap::from_ptr)
     }
 
-    pub fn get_class(&self, name: &str) -> Option<Record> {
+    pub fn get_class(&self, name: &str) -> Result<Record, Error> {
         let name = CString::new(name).unwrap();
         tg_ffi!(TGRecordKeeperGetClass,
                 self.rk_ptr,
@@ -40,7 +42,7 @@ impl RecordKeeper {
                 Record::from_ptr)
     }
 
-    pub fn get_def(&self, name: &str) -> Option<Record> {
+    pub fn get_def(&self, name: &str) -> Result<Record, Error> {
         let name = CString::new(name).unwrap();
         tg_ffi!(TGRecordKeeperGetDef,
                 self.rk_ptr,

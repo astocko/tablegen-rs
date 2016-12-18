@@ -14,6 +14,7 @@ use std::ptr;
 
 use api::*;
 use record_keeper::RecordKeeper;
+use types::Error;
 
 pub struct TableGen {
     tg_ptr: *const CTableGen,
@@ -21,7 +22,7 @@ pub struct TableGen {
 }
 
 impl TableGen {
-    pub fn new(source: &str, includes: Vec<&str>) -> Result<TableGen, &'static str> {
+    pub fn new(source: &str, includes: Vec<&str>) -> Result<TableGen, Error> {
         let source = CString::new(source).unwrap();
         let cstrings: Vec<CString> = includes.iter().map(|&i| CString::new(i).unwrap()).collect();
         let includes: Vec<*const c_char> = cstrings.iter().map(|i| i.as_ptr()).collect();
@@ -33,22 +34,22 @@ impl TableGen {
                 initialized: false,
             })
         } else {
-            Err("Could not initialize a TableGen instance")
+            Err(Error::Other("Could not initialize a TableGen instance"))
         }
     }
 
-    pub fn parse(&mut self) -> Result<bool, &'static str> {
+    pub fn parse(&mut self) -> Result<bool, Error> {
         unsafe {
             if TGParse(self.tg_ptr) > 0 {
                 self.initialized = true;
                 Ok(true)
             } else {
-                Err("Could not parse the source or dependencies")
+                Err(Error::Other("Could not parse the source or dependencies"))
             }
         }
     }
 
-    pub fn record_keeper(&self) -> Option<RecordKeeper> {
+    pub fn record_keeper(&self) -> Result<RecordKeeper, Error> {
         not_init!(self);
         tg_ffi!(TGGetRecordKeeper, self.tg_ptr, RecordKeeper::from_ptr)
     }
