@@ -27,6 +27,7 @@ impl TableGen {
         let tg = unsafe { TGInitialize(source.as_ptr(), includes.len(), includes.as_ptr()) };
 
         if tg.is_null() {
+            println!("{:?}", tg);
             Err("Could not initialize a TableGen instance!".into())
         } else {
             Ok(TableGen {
