@@ -32,11 +32,11 @@ impl Record {
         rec
     }
 
-    fn name(&mut self) -> Result<String> {
+    fn name(&self) -> Result<String> {
         tg_ffi_string!(TGRecordGetName, self.r_ptr)
     }
 
-    pub fn as_string(&mut self) -> Result<String> {
+    pub fn as_string(&self) -> Result<String> {
         tg_ffi_string!(TGRecordAsNewString, self.r_ptr)
     }
 
