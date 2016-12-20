@@ -17,8 +17,6 @@ use cmake::Config;
 
 
 fn main() {
-    let cwd = env::var("CARGO_MANIFEST_DIR").unwrap();
-    let out_dir = env::var("OUT_DIR").unwrap();
     let target = env::var("TARGET").unwrap();
 
     let llvm_config_path: String = if let Ok(bin) = env::var("LLVM_CONFIG_PATH") {
@@ -35,7 +33,9 @@ fn main() {
 
     let mut cfg = File::open(format!("{}/llvm_lib_dir.cfg", dst.display())).unwrap();
     let mut lib_dir = String::new();
-    cfg.read_to_string(&mut lib_dir);
+    if let Err(_) = cfg.read_to_string(&mut lib_dir) {
+        panic!("ctablegen cmake generated configuration file is missing");
+    }
     let lines: Vec<&str> = lib_dir.split("\n").collect();
     for l in lines[1].split(' ') {
         let (_, lib) = l.split_at(2);

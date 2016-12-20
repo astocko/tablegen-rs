@@ -7,20 +7,26 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use types::Error;
 
 macro_rules! not_init {
     ($val: ident) => {
         if !$val.initialized {
-            return Err(Error::Other("TableGen is not initialized"))
+            return Err("TableGen is not initialized".into())
         }
     }
 }
 
 macro_rules! not_null {
     ($val: expr) => {
-        if $val == ptr::null() {
-            return Err(Error::Null)
+        if $val.is_null() {
+            return Err(ErrorKind::NullPtr.into())
+        }
+    };
+    ($val: expr, $ret: expr) => {
+        if $val.is_null() {
+            Err(ErrorKind::NullPtr.into())
+        } else {
+            Ok($ret)
         }
     }
 }
@@ -29,31 +35,19 @@ macro_rules! tg_ffi {
     ($func: expr, $arg1: expr, $ctr: path) => {
         unsafe {
             let val = $func($arg1);
-            if val == ptr::null() {
-                Err(Error::Null)
-            } else {
-                Ok($ctr(val))
-            }
+            not_null!(val, $ctr(val))
         }
     };
     ($func: expr, $arg1: expr, $arg2: expr, $ctr: path) => {
         unsafe {
             let val = $func($arg1, $arg2);
-            if val == ptr::null() {
-                Err(Error::Null)
-            } else {
-                Ok($ctr(val))
-            }
+            not_null!(val, $ctr(val))
         }
     };
     ($func: expr, $arg1: expr, $arg2: expr, $arg3: expr, $ctr: path) => {
         unsafe {
             let val = $func($arg1, $arg2, $arg3);
-            if val == ptr::null() {
-                Err(Error::Null)
-            } else {
-                Ok($ctr(val))
-            }
+            not_null!(val, $ctr(val))
         }
     }
 }

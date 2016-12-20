@@ -7,6 +7,27 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+#![recursion_limit = "1024"]
+
+#[macro_use]
+extern crate error_chain;
+
+pub mod errors {
+    error_chain!{
+        errors {
+            NullPtr {
+                description("FFI returned a null pointer")
+            }
+            InvalidBitRange {
+                description("FFI returned an invalid bit range")
+            }
+            Unimplemented {
+                description("Unimplemented FFI function")
+            }
+        }
+    }
+}
+
 #[macro_use]
 mod macros;
 
@@ -29,7 +50,8 @@ pub use record_value::RecordValue;
 pub use compound_value::{DagValue, ListValue};
 pub use typed_init::TypedInit;
 pub use types::TypedValue;
-pub use types::Error;
+
+
 
 #[cfg(test)]
 mod tests {

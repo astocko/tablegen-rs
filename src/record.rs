@@ -9,38 +9,38 @@
 
 use std::ffi::CStr;
 use std::ffi::CString;
-use std::ptr;
 
 use api::*;
 use record_keeper::RecordKeeper;
 use record_value::RecordValue;
-use types::Error;
+
+use errors::*;
 
 #[derive(Debug)]
 pub struct Record {
     r_ptr: *const CRecord,
-    pub name: Result<String, Error>,
+    pub name: Result<String>,
 }
 
 impl Record {
     pub fn from_ptr(rec: *const CRecord) -> Record {
         let mut rec = Record {
             r_ptr: rec,
-            name: Err(Error::Null),
+            name: Err(ErrorKind::NullPtr.into()),
         };
         rec.name = rec.name();
         rec
     }
 
-    fn name(&mut self) -> Result<String, Error> {
+    fn name(&mut self) -> Result<String> {
         tg_ffi_string!(TGRecordGetName, self.r_ptr)
     }
 
-    pub fn records(&self) -> Result<RecordKeeper, Error> {
+    pub fn records(&self) -> Result<RecordKeeper> {
         tg_ffi!(TGRecordGetRecords, self.r_ptr, RecordKeeper::from_ptr)
     }
 
-    pub fn value(&self, name: &str) -> Result<RecordValue, Error> {
+    pub fn value(&self, name: &str) -> Result<RecordValue> {
         let name = CString::new(name).unwrap();
         tg_ffi!(TGRecordGetValue,
                 self.r_ptr,
@@ -54,16 +54,10 @@ impl Record {
     }
 
     pub fn anonymous(&self) -> bool {
-        unsafe {
-            if TGRecordIsAnonymous(self.r_ptr) > 0 {
-                true
-            } else {
-                false
-            }
-        }
+        unsafe { TGRecordIsAnonymous(self.r_ptr) > 0 }
     }
 
-    pub fn values_iter(&self) -> Result<RecordIterator, Error> {
+    pub fn values_iter(&self) -> Result<RecordIterator> {
         tg_ffi!(TGRecordGetValuesItr, self.r_ptr, RecordIterator::from_ptr)
     }
 }
@@ -82,7 +76,10 @@ impl Iterator for RecordIterator {
     type Item = RecordValue;
 
     fn next(&mut self) -> Option<RecordValue> {
-        if let Ok(res) = tg_ffi!(TGRecordValItrNext, self.iter, RecordValue::from_ptr) {
+        let rec_value: Result<RecordValue> =
+            tg_ffi!(TGRecordValItrNext, self.iter, RecordValue::from_ptr);
+
+        if let Ok(res) = rec_value {
             Some(res)
         } else {
             None

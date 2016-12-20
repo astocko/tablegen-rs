@@ -7,12 +7,12 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::ptr;
 use std::ffi::CStr;
+
+use errors::*;
 
 use api::*;
 use types::TypedValue;
-use types::Error;
 use typed_init::TypedInit;
 
 
@@ -20,18 +20,18 @@ use typed_init::TypedInit;
 #[derive(Debug)]
 pub struct DagValue {
     dag_ptr: *const CRecordValue,
-    pub name: Result<String, Error>,
+    pub name: Result<String>,
 }
 
 impl DagValue {
-    pub fn from_ptr(val: *const CRecordValue, name: Result<String, Error>) -> DagValue {
+    pub fn from_ptr(val: *const CRecordValue, name: Result<String>) -> DagValue {
         DagValue {
             dag_ptr: val,
             name: name,
         }
     }
 
-    pub fn values_iter(&self) -> Result<DagIterator, Error> {
+    pub fn values_iter(&self) -> Result<DagIterator> {
         tg_ffi!(TGDagRecordGetValues, self.dag_ptr, DagIterator::from_ptr)
     }
 }
@@ -50,12 +50,13 @@ impl Iterator for DagIterator {
     type Item = (String, TypedValue);
 
     fn next(&mut self) -> Option<(String, TypedValue)> {
+        let dp_ref = unsafe { TGDagItrNextPair(self.iter) };
+        let ti: Result<TypedInit> = tg_ffi!(TGDagPairGetValue, dp_ref, TypedInit::from_ptr);
+
         let dp = unsafe {
-            let dp_ref = TGDagItrNextPair(self.iter);
             let name_ptr = TGDagPairGetKey(dp_ref);
-            let ti = tg_ffi!(TGDagPairGetValue, dp_ref, TypedInit::from_ptr);
             let name = {
-                if name_ptr == ptr::null() {
+                if name_ptr.is_null() {
                     None
                 } else {
                     Some(CStr::from_ptr(name_ptr).to_string_lossy().into_owned())
@@ -74,21 +75,27 @@ impl Iterator for DagIterator {
     }
 }
 
+impl Drop for DagIterator {
+    fn drop(&mut self) {
+        unsafe { TGDagItrFree(self.iter) }
+    }
+}
+
 #[derive(Debug)]
 pub struct ListValue {
     list_ptr: *const CRecordValue,
-    pub name: Result<String, Error>,
+    pub name: Result<String>,
 }
 
 impl ListValue {
-    pub fn from_ptr(val: *const CRecordValue, name: Result<String, Error>) -> ListValue {
+    pub fn from_ptr(val: *const CRecordValue, name: Result<String>) -> ListValue {
         ListValue {
             list_ptr: val,
             name: name,
         }
     }
 
-    pub fn values_iter(&self) -> Result<ListIterator, Error> {
+    pub fn values_iter(&self) -> Result<ListIterator> {
         tg_ffi!(TGListRecordGetValues, self.list_ptr, ListIterator::from_ptr)
     }
 }
@@ -107,11 +114,17 @@ impl Iterator for ListIterator {
     type Item = TypedValue;
 
     fn next(&mut self) -> Option<TypedValue> {
-        let li = tg_ffi!(TGListItrNext, self.iter, TypedInit::from_ptr);
+        let li: Result<TypedInit> = tg_ffi!(TGListItrNext, self.iter, TypedInit::from_ptr);
         if let Ok(li) = li {
             Some(li.to_typed_value())
         } else {
             None
         }
+    }
+}
+
+impl Drop for ListIterator {
+    fn drop(&mut self) {
+        unsafe { TGListItrFree(self.iter) }
     }
 }

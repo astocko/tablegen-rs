@@ -8,13 +8,12 @@
 // except according to those terms.
 
 use std::ffi::CString;
-use std::ptr;
+
+use errors::*;
 
 use api::*;
 use record_map::RecordMap;
 use record::Record;
-
-use types::Error;
 
 
 pub struct RecordKeeper {
@@ -26,15 +25,15 @@ impl RecordKeeper {
         RecordKeeper { rk_ptr: rk }
     }
 
-    pub fn classes(&self) -> Result<RecordMap, Error> {
+    pub fn classes(&self) -> Result<RecordMap> {
         tg_ffi!(TGRecordKeeperGetClasses, self.rk_ptr, RecordMap::from_ptr)
     }
 
-    pub fn defs(&self) -> Result<RecordMap, Error> {
+    pub fn defs(&self) -> Result<RecordMap> {
         tg_ffi!(TGRecordKeeperGetDefs, self.rk_ptr, RecordMap::from_ptr)
     }
 
-    pub fn get_class(&self, name: &str) -> Result<Record, Error> {
+    pub fn get_class(&self, name: &str) -> Result<Record> {
         let name = CString::new(name).unwrap();
         tg_ffi!(TGRecordKeeperGetClass,
                 self.rk_ptr,
@@ -42,7 +41,7 @@ impl RecordKeeper {
                 Record::from_ptr)
     }
 
-    pub fn get_def(&self, name: &str) -> Result<Record, Error> {
+    pub fn get_def(&self, name: &str) -> Result<Record> {
         let name = CString::new(name).unwrap();
         tg_ffi!(TGRecordKeeperGetDef,
                 self.rk_ptr,

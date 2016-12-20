@@ -88,7 +88,6 @@ extern "C" {
 
     // LLVM DagType
     pub fn TGDagRecordGetValues(record_val: *const CRecordValue) -> *const CDagIterator;
-    pub fn TGDagItrNext(iter: *const CDagIterator) -> *const CTypedInit;
     pub fn TGDagItrNextPair(iter: *const CDagIterator) -> *const CDagPair;
     pub fn TGDagPairGetKey(pair: *const CDagPair) -> *const c_char;
     pub fn TGDagPairGetValue(pair: *const CDagPair) -> *const CTypedInit;

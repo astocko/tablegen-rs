@@ -8,17 +8,17 @@
 // except according to those terms.
 
 use std::ffi::CStr;
-use std::ptr;
+
+use errors::*;
 
 use api::*;
 use record::Record;
 use compound_value::{DagValue, ListValue};
 use types::TypedValue;
-use types::Error;
 
 pub struct RecordValue {
     rv_ptr: *const CRecordValue,
-    pub name: Result<String, Error>,
+    pub name: Result<String>,
     pub value: TypedValue,
     value_type: RecordValueType,
 }
@@ -27,7 +27,7 @@ impl RecordValue {
     pub fn from_ptr(val: *const CRecordValue) -> RecordValue {
         let mut rec_val = RecordValue {
             rv_ptr: val,
-            name: Err(Error::Null),
+            name: Err(ErrorKind::NullPtr.into()),
             value: TypedValue::Invalid,
             value_type: RecordValueType::Invalid,
         };
@@ -38,7 +38,7 @@ impl RecordValue {
         rec_val
     }
 
-    fn name(&self) -> Result<String, Error> {
+    fn name(&self) -> Result<String> {
         tg_ffi_string!(TGRecordValGetName, self.rv_ptr)
     }
 
@@ -46,13 +46,13 @@ impl RecordValue {
         unsafe { TGRecordValGetType(self.rv_ptr) }
     }
 
-    fn list_record_type(&self) -> Result<RecordValueType, Error> {
+    pub fn list_record_type(&self) -> Result<RecordValueType> {
         if self.value_type == RecordValueType::List {
             unsafe {
                 Ok(TGListRecordGetType(self.rv_ptr))
             }
         } else {
-            Err(Error::Null)
+            Err(ErrorKind::NullPtr.into())
         }
     }
 
@@ -71,7 +71,7 @@ impl RecordValue {
         self.value = value;
     }
 
-    fn get_value_as_bit(&self) -> Result<i8, Error> {
+    fn get_value_as_bit(&self) -> Result<i8> {
         let mut bit: TGBit = -1;
         unsafe {
             TGRecordValGetValAsBit(self.rv_ptr, &mut bit);
@@ -80,11 +80,11 @@ impl RecordValue {
         if bit == 0 || bit == 1 {
             Ok(bit)
         } else {
-            Err(Error::Other("Bit value is out of valid range"))
+            Err(ErrorKind::InvalidBitRange.into())
         }
     }
 
-    fn get_value_as_bits(&self) -> Result<Vec<i8>, Error> {
+    fn get_value_as_bits(&self) -> Result<Vec<i8>> {
         let mut bits: Vec<TGBit> = Vec::new();
         let mut len: usize = 0;
         unsafe {
@@ -96,10 +96,10 @@ impl RecordValue {
             }
             TGBitArrayFree(cbits);
         }
-        if bits.is_empty() { Err(Error::Null) } else { Ok(bits) }
+        if bits.is_empty() { Err(ErrorKind::NullPtr.into()) } else { Ok(bits) }
     }
 
-    fn get_value_as_int(&self) -> Result<i64, Error> {
+    fn get_value_as_int(&self) -> Result<i64> {
         let mut int: i64 = 0;
         unsafe {
             TGRecordValGetValAsInt(self.rv_ptr, &mut int);
@@ -107,20 +107,30 @@ impl RecordValue {
         Ok(int)
     }
 
-    fn get_value_as_record(&self) -> Result<Record, Error> {
+    fn get_value_as_record(&self) -> Result<Record> {
         tg_ffi!(TGRecordValGetValAsRecord, self.rv_ptr, Record::from_ptr)
     }
 
-    pub fn as_string(&self) -> Result<String, Error> {
+    pub fn as_string(&self) -> Result<String> {
         tg_ffi_string!(freestring, TGRecordValGetValAsNewString, self.rv_ptr)
     }
 
-    pub fn get_value_as_list(&self) -> Result<ListValue, Error> {
-        Ok(ListValue::from_ptr(self.rv_ptr, self.name.clone()))
+    pub fn get_value_as_list(&self) -> Result<ListValue> {
+        let name = if let Ok(ref name) = self.name {
+            name.clone()
+        } else {
+            "".into()
+        };
+        Ok(ListValue::from_ptr(self.rv_ptr, Ok(name)))
     }
 
-    pub fn get_value_as_dag(&self) -> Result<DagValue, Error> {
-        Ok(DagValue::from_ptr(self.rv_ptr, self.name.clone()))
+    pub fn get_value_as_dag(&self) -> Result<DagValue> {
+        let name = if let Ok(ref name) = self.name {
+            name.clone()
+        } else {
+            "".into()
+        };
+        Ok(DagValue::from_ptr(self.rv_ptr, Ok(name)))
     }
 
     pub fn value(&self) -> &TypedValue {

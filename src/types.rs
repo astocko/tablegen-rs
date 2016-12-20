@@ -23,8 +23,8 @@ pub enum TypedValue {
     Invalid,
 }
 
-#[derive(Copy, Clone, Debug)]
-pub enum Error {
-    Null,
-    Other(&'static str),
-}
+// #[derive(Copy, Clone, Debug)]
+// pub enum Error {
+//     Null,
+//     Other(&'static str),
+// }
