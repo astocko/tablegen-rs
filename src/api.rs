@@ -78,6 +78,7 @@ extern "C" {
     pub fn TGRecordValGetValAsBits(record_val: *const CRecordValue, len: *mut usize) -> *mut i8;
     pub fn TGRecordValGetValAsInt(record_val: *const CRecordValue, integer: *mut i64) -> TGBool;
     pub fn TGRecordValGetValAsRecord(record_val: *const CRecordValue) -> *const CRecord;
+    pub fn TGRecordValGetValAsDefRecord(record_val: *const CRecordValue) -> *const CRecord;
 
     // // LLVM RecordVal Iterators
     pub fn TGRecordValItrNext(iter: *const CRecordValueIter) -> *const CRecordValue;

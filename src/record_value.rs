@@ -137,4 +137,8 @@ impl RecordValue {
     pub fn value(&self) -> &TypedValue {
         &self.value
     }
+
+    pub fn get_record_as_def(&self) -> Result<Record> {
+        tg_ffi!(TGRecordValGetValAsDefRecord, self.rv_ptr, Record::from_ptr)
+    }
 }
