@@ -11,6 +11,7 @@ documentation = "https://github.com/astocko/tablegen-rs"
 keywords = ["llvm", "tablegen", "parser"]
 
 [dependencies]
+error-chain = "^0.7"
 
 [build-dependencies]
 cmake = "0.1"

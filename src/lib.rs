@@ -20,16 +20,16 @@ pub mod compound_value;
 pub mod types;
 pub mod typed_init;
 
+
 pub use tablegen::TableGen;
 pub use record_keeper::RecordKeeper;
 pub use record_map::RecordMap;
 pub use record::Record;
 pub use record_value::RecordValue;
 pub use compound_value::{DagValue, ListValue};
+pub use typed_init::TypedInit;
 pub use types::TypedValue;
 pub use types::Error;
-pub use typed_init::TypedInit;
-
 
 #[cfg(test)]
 mod tests {
