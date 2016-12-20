@@ -55,6 +55,7 @@ pub use types::TypedValue;
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     #[test]
     fn it_works() {}
 }
