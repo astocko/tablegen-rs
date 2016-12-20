@@ -64,6 +64,7 @@ extern "C" {
     // // LLVM Record
     pub fn TGRecordGetRecords(record: *const CRecord) -> *const CRecordKeeper;
     pub fn TGRecordGetName(record: *const CRecord) -> *const c_char;
+    pub fn TGRecordAsNewString(record: *const CRecord) -> *const c_char;
     pub fn TGRecordGetValue(record: *const CRecord, name: *const c_char) -> *const CRecordValue;
     pub fn TGRecordGetFieldType(record: *const CRecord, name: *const c_char) -> RecordValueType;
     pub fn TGRecordGetValuesItr(record: *const CRecord) -> *const CRecordValueIter;

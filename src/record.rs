@@ -36,6 +36,10 @@ impl Record {
         tg_ffi_string!(TGRecordGetName, self.r_ptr)
     }
 
+    pub fn as_string(&mut self) -> Result<String> {
+        tg_ffi_string!(TGRecordAsNewString, self.r_ptr)
+    }
+
     pub fn records(&self) -> Result<RecordKeeper> {
         tg_ffi!(TGRecordGetRecords, self.r_ptr, RecordKeeper::from_ptr)
     }
