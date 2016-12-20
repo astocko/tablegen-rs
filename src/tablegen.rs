@@ -27,12 +27,12 @@ impl TableGen {
         let tg = unsafe { TGInitialize(source.as_ptr(), includes.len(), includes.as_ptr()) };
 
         if tg.is_null() {
+            Err("Could not initialize a TableGen instance!".into())
+        } else {
             Ok(TableGen {
                 tg_ptr: tg,
                 initialized: false,
             })
-        } else {
-            Err("Could not initialize a TableGen instance!".into())
         }
     }
 
