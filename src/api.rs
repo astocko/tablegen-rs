@@ -12,7 +12,7 @@ use std::os::raw::c_char;
 pub type TGBit = i8;
 pub type TGBool = i32;
 
-#[derive(PartialEq, PartialOrd)]
+#[derive(Debug, PartialEq, PartialOrd)]
 #[repr(C)]
 pub enum RecordValueType {
     Bit,

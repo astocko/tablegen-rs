@@ -16,6 +16,7 @@ use record::Record;
 use compound_value::{DagValue, ListValue};
 use types::TypedValue;
 
+#[derive(Debug)]
 pub struct RecordValue {
     rv_ptr: *const CRecordValue,
     pub name: Result<String>,

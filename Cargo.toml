@@ -1,6 +1,6 @@
 [package]
 name = "tablegen"
-version = "0.1.3"
+version = "0.1.4"
 authors = ["Alexander Stocko <as@coder.gg>"]
 build = "build.rs"
 description = "Bindings to LLVM's TableGen via the ctablegen library"
